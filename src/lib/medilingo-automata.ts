@@ -119,15 +119,23 @@ export function validateDFA(tokens: Token[]): { history: any[], isValid: boolean
 }
 
 export function translateFST(tokens: Token[]): string {
-  // Finite State Transducer Logic
   const parts = tokens
     .filter(t => t.type !== 'PERIOD')
     .map(t => taglishDict[t.value.toLowerCase()] || t.value);
 
-  // Apply Taglish Grammar Rules
-  const hasQty = tokens.some(t => t.type === 'QUANTITY');
+  // LOGIC FIX:
+  const qtyIdx = tokens.findIndex(t => t.type === 'QUANTITY');
   const unitIdx = tokens.findIndex(t => t.type === 'UNIT');
-  if (unitIdx !== -1) parts.splice(unitIdx, 0, hasQty ? 'ng' : 'ang');
+
+  if (qtyIdx !== -1) {
+    // If there is a number (e.g., "1"), put 'ng' BEFORE the number
+    // Result: "Uminom ng 1 tableta"
+    parts.splice(qtyIdx, 0, 'ng');
+  } else if (unitIdx !== -1) {
+    // If no number, put 'ang' BEFORE the unit
+    // Result: "Uminom ang tableta" (or 'ng' depending on preference)
+    parts.splice(unitIdx, 0, 'ang');
+  }
 
   let res = parts.join(' ');
   return res.charAt(0).toUpperCase() + res.slice(1) + ".";
