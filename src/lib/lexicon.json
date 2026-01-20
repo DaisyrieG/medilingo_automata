@@ -1,0 +1,26 @@
+{
+  "taglishDict": {
+   "take": "uminom", "apply": "ipahid", "consume": "kainin", "administer": "ibigay", "use": "gamitin",
+  "a": "isang", "an": "isang", "one": "isang", "1": "isang",
+  "two": "dalawang", "2": "dalawang", "three": "tatlong", "3": "tatlong",
+  "four": "apat na", "4": "apat na", "five": "limang", "5": "limang",
+  "six": "anim na", "6": "anim na", "seven": "pitong", "7": "pitong",
+  "eight": "walong", "8": "walong", "nine": "siyam na", "9": "siyam na", "ten": "sampung", "10": "sampung",
+  "half": "kalahating","tablet": "tableta", "capsule": "kapsula", "pill": "tableta", "ml": "ml", "milliliter": "milliliter",
+  "tablespoon": "kutsara", "teaspoon": "kutsarita", "drop": "patak", "spray": "isprey",
+  "puff": "puff", "application": "aplikasyon", "lozenge": "lozenge", "patch": "patch",
+  "daily": "araw-araw", "once a day": "isang beses sa isang araw", "twice a day": "dalawang beses sa isang araw",
+  "three times a day": "tatlong beses sa isang araw", "four times a day": "apat na beses sa isang araw",
+  "as needed": "kung kinakailangan","every": "bawat", "hours": "oras", "hour": "oras", "days": "na araw", "day": "araw",
+  "weeks": "na linggo", "week": "linggo", "months": "na buwan", "month": "buwan","before meals": "bago kumain",
+  "after meals": "pagkatapos kumain","with meals": "kasabay ng pagkain","at bedtime": "bago matulog","in the morning": "sa umaga","in the afternoon": "sa hapon",
+  "at night": "sa gabi","immediately": "ngayon na","every other day": "tuwing makalawa", "twice weekly": "dalawang beses sa isang linggo","for seven days": "sa loob ng pitong araw","insert": "ipasok","swallow": "lunukin","inhale": "langhapin","sachet": "sachet","unit": "yunit","mcg": "micrograms","mg": "milligrams","of": "ng", "and": "at", "then": "pagkatapos", "ointment": "pamahid",
+  "capsules": "kapsula"
+  },  "patterns": {
+    "FREQUENCY": "^(every\\s\\d+\\s(hours?|days?|weeks?|months?)|once a day|twice a day|three times a day|four times a day|daily|as needed|before meals|after meals|at bedtime|immediately|in the morning|at night)\\b",
+    "ROUTE": "^(take|apply|consume|administer|use|insert|swallow|inhale)\\b",
+    "QUANTITY": "^(a|an|one|two|three|four|five|six|seven|eight|nine|ten|half|\\d+(\\.\\d+)?)\\b",
+    "UNIT": "^(tablet|capsule|pill|ml|milliliter|tablespoon|teaspoon|drop|spray|puff|application|lozenge|patch|sachet|unit|mcg|mg|ointment)s?\\b",
+    "PERIOD": "^(\\.)"
+  }
+}
