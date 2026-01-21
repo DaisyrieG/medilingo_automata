@@ -1,16 +1,9 @@
 "use client";
-
+import { processMultipleLines } from '@/lib/medilingo-automata';
 import React, { useState } from 'react';
 import { Play, Table, Activity, AlertCircle, Pill } from 'lucide-react';
 
-// --- IMPORT THE LOGIC FROM YOUR LIB FOLDER ---
-// Note: If you get a "Module not found" error, check the path:
-// It might be '../lib/medilingo_automata' or '@/lib/medilingo_automata' depending on your setup.
-import { tokenize, validateDFA, translateFST } from '@/lib/medilingo-automata';
 
-/**
- * --- UI COMPONENT ---
- */
 export default function DosagePage() {
   const [input, setInput] = useState("take 1 tablet daily");
   // We type 'log' as 'any[]' here to accept the history object from your logic file
@@ -19,21 +12,21 @@ export default function DosagePage() {
   });
 
   const processAutomaton = () => {
-    try {
-      // 1. Tokenize (Scanner)
-      const tokens = tokenize(input);
-      
-      // 2. Validate (Parser/DFA)
-      const { history } = validateDFA(tokens);
-      
-      // 3. Translate (FST)
-      const output = translateFST(tokens);
-      
-      setResult({ tokens, log: history, output, error: "" });
-    } catch (e: any) {
-      setResult({ tokens: [], log: [], output: "", error: e.message });
-    }
-  };
+  try {
+
+    const result = processMultipleLines(input);
+    
+    setResult({ 
+      tokens: result.tokens, 
+      log: result.log, 
+      output: result.output, 
+      error: "" 
+    });
+
+  } catch (e: any) {
+    setResult({ tokens: [], log: [], output: "", error: e.message });
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#021526] text-slate-200 p-4 md:p-8 font-sans">
