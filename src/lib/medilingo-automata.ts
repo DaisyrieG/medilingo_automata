@@ -17,26 +17,12 @@ export enum State {
 }
 
 // 3. δ (Transition Function: Q × Σ -> Q)
-// This object is the "Pure" Automata implementation your professor is looking for.
 const δ: Record<number, Partial<Record<TokenType, State>>> = {
-  [State.START]: {
-    'ROUTE': State.AFTER_ROUTE
-  },
-  [State.AFTER_ROUTE]: {
-    'QUANTITY': State.AFTER_QUANTITY,
-    'UNIT': State.AFTER_UNIT
-  },
-  [State.AFTER_QUANTITY]: {
-    'UNIT': State.AFTER_UNIT
-  },
-  [State.AFTER_UNIT]: {
-    'FREQUENCY': State.AFTER_FREQUENCY,
-    'PERIOD': State.SUCCESS
-  },
-  [State.AFTER_FREQUENCY]: {
-    'PERIOD': State.SUCCESS,
-    'FREQUENCY': State.AFTER_FREQUENCY // Allows multiple frequencies like "daily as needed"
-  }
+  [State.START]: { 'ROUTE': State.AFTER_ROUTE },
+  [State.AFTER_ROUTE]: { 'QUANTITY': State.AFTER_QUANTITY, 'UNIT': State.AFTER_UNIT },
+  [State.AFTER_QUANTITY]: { 'UNIT': State.AFTER_UNIT },
+  [State.AFTER_UNIT]: { 'FREQUENCY': State.AFTER_FREQUENCY, 'PERIOD': State.SUCCESS },
+  [State.AFTER_FREQUENCY]: { 'PERIOD': State.SUCCESS, 'FREQUENCY': State.AFTER_FREQUENCY }
 };
 
 // 4. F (Final/Accepting States)
@@ -49,7 +35,6 @@ export interface Token {
 
 const taglishDict: Record<string, string> = lexicon.taglishDict;
 
-// Lexical Rules (NFA components for the Scanner)
 const tokenPatterns: { token: TokenType; pattern: RegExp }[] = [
   { token: 'FREQUENCY', pattern: new RegExp(lexicon.patterns.FREQUENCY, 'i') },
   { token: 'ROUTE', pattern: new RegExp(lexicon.patterns.ROUTE, 'i') },
@@ -58,18 +43,17 @@ const tokenPatterns: { token: TokenType; pattern: RegExp }[] = [
   { token: 'PERIOD', pattern: new RegExp(lexicon.patterns.PERIOD, 'i') }
 ];
 
-// --- CORE FUNCTIONS ---
+// --- CORE FUNCTIONS (Single Line Processing) ---
 
 export function tokenize(input: string): Token[] {
   let processed = input.trim().toLowerCase();
   
-  // Abbreviation expansion (Preprocessing)
-  const abbreviations: Record<string, string> = {
-    'bid': 'twice a day', 'tid': 'three times a day', 'qd': 'every day', 'prn': 'as needed'
-  };
+  // Use external abbreviations
+  const abbreviations: Record<string, string> = lexicon.abbreviations;
   for (const abbr in abbreviations) {
     processed = processed.replace(new RegExp(`\\b${abbr}\\b`, 'g'), abbreviations[abbr]);
   }
+  // Ensure period exists for safety
   if (!processed.endsWith('.')) processed += ' .';
 
   const tokens: Token[] = [];
@@ -102,10 +86,8 @@ export function validateDFA(tokens: Token[]): { history: any[], isValid: boolean
   for (const token of tokens) {
     if (token.type === 'INVALID') throw new Error(`Lexical Error: "${token.value}" is not in Σ.`);
     
-    // Perform transition: q_next = δ(q_current, token)
     const nextState = δ[currentState]?.[token.type] ?? State.TRAP;
-    
-    history.push({ from: currentState, input: token.type, to: nextState });
+    history.push({ from: currentState, input: token.type, lexeme: token.value, to: nextState });
     
     if (nextState === State.TRAP) {
       throw new Error(`Syntax Error: ${token.type} is invalid in State ${currentState}.`);
@@ -123,20 +105,55 @@ export function translateFST(tokens: Token[]): string {
     .filter(t => t.type !== 'PERIOD')
     .map(t => taglishDict[t.value.toLowerCase()] || t.value);
 
-  // LOGIC FIX:
   const qtyIdx = tokens.findIndex(t => t.type === 'QUANTITY');
   const unitIdx = tokens.findIndex(t => t.type === 'UNIT');
 
+  // Logic: Insert 'ng' before Quantity, or 'ang' before Unit if no Qty
   if (qtyIdx !== -1) {
-    // If there is a number (e.g., "1"), put 'ng' BEFORE the number
-    // Result: "Uminom ng 1 tableta"
     parts.splice(qtyIdx, 0, 'ng');
   } else if (unitIdx !== -1) {
-    // If no number, put 'ang' BEFORE the unit
-    // Result: "Uminom ang tableta" (or 'ng' depending on preference)
     parts.splice(unitIdx, 0, 'ang');
   }
 
   let res = parts.join(' ');
   return res.charAt(0).toUpperCase() + res.slice(1) + ".";
+}
+
+// --- NEW FUNCTION: MULTI-LINE PROCESSOR ---
+// Use this function in your UI to handle multiple instructions at once.
+
+export function processMultipleLines(input: string) {
+  // 1. Split by new lines
+  const lines = input.split(/\r?\n/).filter(line => line.trim() !== "");
+  
+  const allTokens: any[] = [];
+  const allHistory: any[] = [];
+  const allOutputs: string[] = [];
+  const errors: string[] = [];
+
+  lines.forEach((line, index) => {
+    try {
+      // Process each line individually
+      const tokens = tokenize(line);
+      const { history } = validateDFA(tokens);
+      const output = translateFST(tokens);
+
+      // Aggregate results
+      allTokens.push(...tokens); // or push as array if you want separation
+      allHistory.push(...history);
+      allOutputs.push(output);
+    } catch (error: any) {
+      errors.push(`Line ${index + 1}: ${error.message}`);
+    }
+  });
+
+  if (errors.length > 0) {
+    throw new Error(errors.join("\n"));
+  }
+
+  return {
+    tokens: allTokens,
+    log: allHistory,
+    output: allOutputs.join("\n") // Join translations with new lines
+  };
 }
